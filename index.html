@@ -1,27 +1,34 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>ARIMA Identification Dashboard</title>
+    <title>ARIMA Identification & Limitations</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: sans-serif; max-width: 900px; margin: auto; padding: 20px; }
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .tab-btn { padding: 10px 20px; cursor: pointer; background: #eee; border: none; font-weight: bold; }
+        body { font-family: sans-serif; max-width: 950px; margin: auto; padding: 20px; background-color: #f4f7f6; }
+        .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .tab-btn { padding: 12px 22px; cursor: pointer; background: #eee; border: none; font-weight: bold; border-radius: 6px; transition: background 0.2s; }
+        .tab-btn:hover { background: #ddd; }
         .tab-btn.active { background: #007bff; color: white; }
-        .tab-content { display: none; }
+        .tab-content { display: none; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .tab-content.active { display: block; }
-        .controls { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 5px; }
-        .chart-container { display: flex; gap: 20px; height: 300px; }
+        .controls { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 5px; border-left: 4px solid #adb5bd; }
+        .chart-container { display: flex; gap: 20px; height: 350px; }
         canvas { background: white; border: 1px solid #ddd; }
-        .desc-box { padding: 10px; background: #e9ecef; border-left: 4px solid #007bff; margin-top: 10px; }
+        .desc-box { padding: 15px; background: #e9ecef; border-left: 4px solid #007bff; margin-top: 15px; border-radius: 4px; }
+        .limitation-selector { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+        .limitation-radio { display: none; }
+        .limitation-label { padding: 8px 16px; background: #f0f0f0; border: 1px solid #ccc; border-radius: 20px; cursor: pointer; font-size: 14px; }
+        .limitation-radio:checked + .limitation-label { background: #e0f2f1; border-color: #4caf50; color: #1b5e20; font-weight: bold; }
     </style>
 </head>
 <body>
+    <h2 style="text-align: center; color: #333; margin-bottom: 25px;">ARIMA: Identification & Limitations Visualizer</h2>
     <div class="tabs">
         <button class="tab-btn active" onclick="openTab('tab-compare', event)">1. Before vs After Differencing</button>
         <button class="tab-btn" onclick="openTab('tab-d', event)">2. Finding d</button>
         <button class="tab-btn" onclick="openTab('tab-p', event)">3. Finding p</button>
         <button class="tab-btn" onclick="openTab('tab-q', event)">4. Finding q</button>
+        <button class="tab-btn" onclick="openTab('tab-limitations', event)">5. ARIMA Limitations (Conceptual Failure)</button>
     </div>
 
     <div id="tab-compare" class="tab-content active">
@@ -36,15 +43,10 @@
             <div id="compare-desc" class="desc-box"></div>
         </div>
         <div class="chart-container">
-            <div style="flex: 1; position: relative;">
-                <canvas id="compareAcfChart"></canvas>
-            </div>
-            <div style="flex: 1; position: relative;">
-                <canvas id="comparePacfChart"></canvas>
-            </div>
+            <div style="flex: 1; position: relative;"><canvas id="compareAcfChart"></canvas></div>
+            <div style="flex: 1; position: relative;"><canvas id="comparePacfChart"></canvas></div>
         </div>
     </div>
-
     <div id="tab-d" class="tab-content">
         <h3>Finding d (Differencing)</h3>
         <p>Observe how differencing removes trends to make data stationary.</p>
@@ -52,11 +54,8 @@
             <label>Differencing Level (d): <span id="d-val">0</span></label><br>
             <input type="range" id="d-slider" min="0" max="2" value="0" step="1">
         </div>
-        <div class="chart-container" style="height: 400px;">
-            <canvas id="dChart"></canvas>
-        </div>
+        <div class="chart-container" style="height: 400px;"><canvas id="dChart"></canvas></div>
     </div>
-
     <div id="tab-p" class="tab-content">
         <h3>Finding p (AutoRegressive Order)</h3>
         <p>Look at the PACF for a sharp cutoff to find 'p', while ACF decays gradually.</p>
@@ -65,15 +64,10 @@
             <input type="range" id="p-slider" min="1" max="5" value="1" step="1">
         </div>
         <div class="chart-container">
-            <div style="flex: 1; position: relative;">
-                <canvas id="pAcfChart"></canvas>
-            </div>
-            <div style="flex: 1; position: relative;">
-                <canvas id="pPacfChart"></canvas>
-            </div>
+            <div style="flex: 1; position: relative;"><canvas id="pAcfChart"></canvas></div>
+            <div style="flex: 1; position: relative;"><canvas id="pPacfChart"></canvas></div>
         </div>
     </div>
-
     <div id="tab-q" class="tab-content">
         <h3>Finding q (Moving Average Order)</h3>
         <p>Look at the ACF for a sharp cutoff to find 'q', while PACF decays gradually.</p>
@@ -82,12 +76,34 @@
             <input type="range" id="q-slider" min="1" max="5" value="1" step="1">
         </div>
         <div class="chart-container">
-            <div style="flex: 1; position: relative;">
-                <canvas id="qAcfChart"></canvas>
+            <div style="flex: 1; position: relative;"><canvas id="qAcfChart"></canvas></div>
+            <div style="flex: 1; position: relative;"><canvas id="qPacfChart"></canvas></div>
+        </div>
+    </div>
+    <div id="tab-limitations" class="tab-content">
+        <h3>Visualizing ARIMA Limitations</h3>
+        <p>ARIMA is powerful, but it's fundamentally built on direct history and linear math. It fails when the real world gets complex.</p>
+        
+        <div class="controls">
+            <label style="font-weight: bold;">Apply a Limitation (Conceptual Failure):</label>
+            <div class="limitation-selector">
+                <input type="radio" id="lim-nonlinear" name="limitation" value="nonlinear" class="limitation-radio" checked>
+                <label for="lim-nonlinear" class="limitation-label">1. Non-Linear Data (Failure)</label>
+                
+                <input type="radio" id="lim-exogenous" name="limitation" value="exogenous" class="limitation-radio">
+                <label for="lim-exogenous" class="limitation-label">2. Exogenous Factor (Shock)</label>
+                
+                <input type="radio" id="lim-seasonality" name="limitation" value="seasonality" class="limitation-radio">
+                <label for="lim-seasonality" class="limitation-label">3. Regular Seasonality (SARIMA Needed)</label>
+                
+                <input type="radio" id="lim-outlier" name="limitation" value="outlier" class="limitation-radio">
+                <label for="lim-outlier" class="limitation-label">4. Fragile to Outliers (Persistence)</label>
             </div>
-            <div style="flex: 1; position: relative;">
-                <canvas id="qPacfChart"></canvas>
-            </div>
+            <div id="limit-desc" class="desc-box"></div>
+        </div>
+
+        <div class="chart-container" style="height: 400px;">
+            <canvas id="limitationsChart"></canvas>
         </div>
     </div>
 
@@ -101,6 +117,7 @@
 
         const lags = Array.from({length: 15}, (_, i) => i + 1);
         const timeSteps = Array.from({length: 50}, (_, i) => i + 1);
+        const limitTimeSteps = Array.from({length: 50}, (_, i) => i + 1);
 
         function createBarChart(ctxId, title, color) {
             return new Chart(document.getElementById(ctxId).getContext('2d'), {
@@ -110,93 +127,143 @@
             });
         }
 
-        // Tab 1: Compare Before/After
+        // JS for Tab 1-4 (reused)
         const compareAcfChart = createBarChart('compareAcfChart', 'ACF', '#6f42c1');
         const comparePacfChart = createBarChart('comparePacfChart', 'PACF', '#e83e8c');
-
         function updateCompare() {
             const state = document.getElementById('diff-state').value;
             const desc = document.getElementById('compare-desc');
-            let acfData = [];
-            let pacfData = [];
-
-            if (state === 'before') {
-                acfData = lags.map(lag => 1 - (lag * 0.04)); 
-                pacfData = lags.map(lag => lag === 1 ? 0.95 : (Math.random() * 0.1 - 0.05)); 
-                desc.innerHTML = "<strong>Rule:</strong> The ACF decays extremely slowly. The PACF has a massive spike at lag 1. This proves the data has a trend. You cannot identify 'p' or 'q' yet. You must apply differencing first.";
-            } else {
-                acfData = lags.map(lag => Math.pow(0.5, lag)); 
-                pacfData = lags.map(lag => lag === 1 ? 0.5 : (Math.random() * 0.1 - 0.05)); 
-                desc.innerHTML = "<strong>Rule:</strong> The ACF now drops to zero quickly. The data is stationary. You can now safely read the PACF and ACF cutoffs to find your 'p' and 'q' values.";
-            }
-
-            compareAcfChart.data.datasets[0].data = acfData;
-            comparePacfChart.data.datasets[0].data = pacfData;
-            compareAcfChart.update();
-            comparePacfChart.update();
+            let acfData = []; let pacfData = [];
+            if (state === 'before') { acfData = lags.map(lag => 1 - (lag * 0.04)); pacfData = lags.map(lag => lag === 1 ? 0.95 : (Math.random() * 0.1 - 0.05)); desc.innerHTML = "<strong>Visual Signature:</strong> The ACF decays extremely slowly. This proves the data has a strong trend and is non-stationary. You cannot identify 'p' or 'q' yet; differencing is mandatory."; }
+            else { acfData = lags.map(lag => Math.pow(0.5, lag)); pacfData = lags.map(lag => lag === 1 ? 0.5 : (Math.random() * 0.1 - 0.05)); desc.innerHTML = "<strong>Visual Signature:</strong> The ACF now drops to zero quickly. The data is now stationary, revealing the true underlying AR/MA patterns that allow parameter selection."; }
+            compareAcfChart.data.datasets[0].data = acfData; comparePacfChart.data.datasets[0].data = pacfData; compareAcfChart.update(); comparePacfChart.update();
         }
-        document.getElementById('diff-state').addEventListener('change', updateCompare);
-        updateCompare();
+        document.getElementById('diff-state').addEventListener('change', updateCompare); updateCompare();
 
-        // Tab 2: Finding d
         const ctxD = document.getElementById('dChart').getContext('2d');
-        let dChart = new Chart(ctxD, {
+        let dChart = new Chart(ctxD, { type: 'line', data: { labels: timeSteps, datasets: [{ label: 'Time Series Data', data: [], borderColor: 'blue', tension: 0.1 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { suggestedMin: -5, suggestedMax: 50 } } } });
+        function updateD() { const d = parseInt(document.getElementById('d-slider').value); document.getElementById('d-val').innerText = d; let data = []; for(let i=0; i<50; i++) { let noise = Math.random() * 4 - 2; if (d === 0) data.push(Math.pow(i*0.25, 2) + noise); else if (d === 1) data.push(i*0.8 + noise); else data.push(noise); } dChart.data.datasets[0].data = data; dChart.update(); }
+        document.getElementById('d-slider').addEventListener('input', updateD); updateD();
+
+        const pAcfChart = createBarChart('pAcfChart', 'ACF', '#17a2b8'); const pPacfChart = createBarChart('pPacfChart', 'PACF', '#fd7e14');
+        function updateP() { const p = parseInt(document.getElementById('p-slider').value); document.getElementById('p-val').innerText = p; let acfData = lags.map(lag => Math.pow(0.75, lag)); let pacfData = lags.map(lag => lag <= p ? 0.9 - (lag*0.05) : (Math.random()*0.15 - 0.075)); pAcfChart.data.datasets[0].data = acfData; pPacfChart.data.datasets[0].data = pacfData; pAcfChart.update(); pPacfChart.update(); }
+        document.getElementById('p-slider').addEventListener('input', updateP); updateP();
+
+        const qAcfChart = createBarChart('qAcfChart', 'ACF', '#17a2b8'); const qPacfChart = createBarChart('qPacfChart', 'PACF', '#fd7e14');
+        function updateQ() { const q = parseInt(document.getElementById('q-slider').value); document.getElementById('q-val').innerText = q; let acfData = lags.map(lag => lag <= q ? 0.9 - (lag*0.05) : (Math.random()*0.15 - 0.075)); let pacfData = lags.map(lag => Math.pow(-0.65, lag)); qAcfChart.data.datasets[0].data = acfData; qPacfChart.data.datasets[0].data = pacfData; qAcfChart.update(); qPacfChart.update(); }
+        document.getElementById('q-slider').addEventListener('input', updateQ); updateQ();
+
+        // **JS for NEW Tab 5: LIMITATIONS**
+        const ctxLim = document.getElementById('limitationsChart').getContext('2d');
+        let limitationsChart = new Chart(ctxLim, {
             type: 'line',
-            data: { labels: timeSteps, datasets: [{ label: 'Time Series Data', data: [], borderColor: 'blue', tension: 0.1 }] },
-            options: { responsive: true, maintainAspectRatio: false, scales: { y: { suggestedMin: -5, suggestedMax: 50 } } }
+            data: {
+                labels: limitTimeSteps,
+                datasets: [
+                    { label: 'True Data / Correct Future', data: [], borderColor: 'green', tension: 0.1, fill: false },
+                    { label: 'Conceptual ARIMA Forecast (Failure)', data: [], borderColor: 'red', borderDash: [5, 5], tension: 0.1, fill: false }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { title: { display: true, text: 'Day (History 1-30, Forecast 31-50)' } },
+                    y: { title: { display: true, text: 'Value' } }
+                }
+            }
         });
 
-        function updateD() {
-            const d = parseInt(document.getElementById('d-slider').value);
-            document.getElementById('d-val').innerText = d;
-            let data = [];
-            for(let i=0; i<50; i++) {
-                let noise = Math.random() * 4 - 2;
-                if (d === 0) data.push(Math.pow(i*0.25, 2) + noise); 
-                else if (d === 1) data.push(i*0.8 + noise); 
-                else data.push(noise); 
+        function updateLimitations() {
+            const limitation = document.querySelector('input[name="limitation"]:checked').value;
+            const desc = document.getElementById('limit-desc');
+            let trueData = [];
+            let forecastData = [];
+
+            // Reset Forecast Line (Nulls for History)
+            forecastData = new Array(30).fill(null);
+
+            // Generator logic per limitation
+            if (limitation === 'nonlinear') {
+                for (let i = 0; i < 50; i++) {
+                    let noise = Math.random() * 4 - 2;
+                    let val = Math.pow(i * 0.3, 2.1) + 10; // True Data is Exponential Curve
+                    trueData.push(val + noise);
+                    if (i >= 30) {
+                        // ARIMA Concept: Linear integrated trend continuation from Day 30
+                        let lastHistVal = Math.pow(29 * 0.3, 2.1) + 10;
+                        let linearSlope = (lastHistVal - (Math.pow(28 * 0.3, 2.1) + 10)); // d=1 concept
+                        forecastData.push(lastHistVal + (linearSlope * (i - 29)) + noise);
+                    }
+                }
+                desc.innerHTML = "<strong>Conceptual Failure (Non-Linearity):</strong> Real-world growth (e.g., exponential adoption) is curved. ARIMA, relying on differencing, conceptually forecasts a straight-line integrated trend, completely missing the acceleration.";
+                limitationsChart.options.scales.y.suggestedMin = 0; limitationsChart.options.scales.y.suggestedMax = 150;
+
+            } else if (limitation === 'exogenous') {
+                for (let i = 0; i < 50; i++) {
+                    let noise = Math.random() * 3 - 1.5;
+                    let baseVal = 20; 
+                    if (i < 30) {
+                        trueData.push(baseVal + noise); // History is stable
+                    } else {
+                        // EXOGENOUS SHOCK OCCURS ON DAY 31 (e.g., major marketing campaign/policy)
+                        trueData.push(baseVal + 30 + noise); // True Data is high
+                        // ARIMA Concept: Blind to campaign, only sees stable history. Forecasts stability.
+                        forecastData.push(baseVal + noise); 
+                    }
+                }
+                desc.innerHTML = "<strong>Conceptual Failure (External Factors):</strong> A major exogenous shock occurs on Day 31 (like a policy shift). ARIMA is blind to *causes*; it only knows its own history (1-30), conceptually forecasting the stable status quo.";
+                limitationsChart.options.scales.y.suggestedMin = 0; limitationsChart.options.scales.y.suggestedMax = 60;
+
+            } else if (limitation === 'seasonality') {
+                for (let i = 0; i < 50; i++) {
+                    let noise = Math.random() * 2 - 1;
+                    let seasonalWave = Math.sin(i / 2.5) * 15 + 25; // Continuous Seasonality
+                    trueData.push(seasonalWave + noise); 
+                    if (i >= 30) {
+                        // ARIMA Concept (d=0/1): Cannot model repeating wave without SARIMA extension.
+                        // Conceptually smooths past history into a simple decay back to mean or flat line.
+                        forecastData.push(25 + noise); 
+                    }
+                }
+                desc.innerHTML = "<strong>Conceptual Failure (Seasonality):</strong> The data has repeating cycles (every ~16 days). Standard ARIMA (without SARIMA extension) sees differenced noise or historical values and conceptually smooths them into a flat line, entirely missing the next wave.";
+                limitationsChart.options.scales.y.suggestedMin = 0; limitationsChart.options.scales.y.suggestedMax = 50;
+
+            } else if (limitation === 'outlier') {
+                for (let i = 0; i < 50; i++) {
+                    let noise = Math.random() * 2 - 1;
+                    let stableVal = 25;
+                    if (i < 29) {
+                        trueData.push(stableVal + noise);
+                    } else if (i === 29) {
+                        // MASSIVE OUTLIER ON THE LAST DAY OF HISTORY
+                        trueData.push(stableVal + 50 + noise); // High spike
+                    } else {
+                        // Correct Future: The spike corrects immediately.
+                        trueData.push(stableVal + noise); 
+                        // ARIMA Concept (Chasing Noise): High order AR or weak MA makes ARIMA conceptually
+                        // 'chase' the outlier, forecasting that the spike will persist and decay slowly,
+                        // rather than recognizing it as singular noise.
+                        let decayphi = 0.8;
+                        let lastSpikeVal = stableVal + 50;
+                        let conceptDecay = ((lastSpikeVal - stableVal) * Math.pow(decayphi, i-29)) + stableVal;
+                        forecastData.push(conceptDecay + noise);
+                    }
+                }
+                desc.innerHTML = "<strong>Conceptual Failure (Outliers):</strong> A single, extreme shock (Day 30) heavily skews the model's parameters (especially the Moving Average/Error components). Instead of knowing the spike corrected immediately, ARIMA 'chases' the noise, incorrectly forecasting that the high value will persist and only decay slowly.";
+                limitationsChart.options.scales.y.suggestedMin = 0; limitationsChart.options.scales.y.suggestedMax = 80;
             }
-            dChart.data.datasets[0].data = data;
-            dChart.update();
+
+            limitationsChart.data.datasets[0].data = trueData;
+            limitationsChart.data.datasets[1].data = forecastData;
+            limitationsChart.update();
         }
-        document.getElementById('d-slider').addEventListener('input', updateD);
-        updateD();
 
-        // Tab 3: Finding p
-        const pAcfChart = createBarChart('pAcfChart', 'ACF', '#17a2b8');
-        const pPacfChart = createBarChart('pPacfChart', 'PACF', '#fd7e14');
+        document.querySelectorAll('input[name="limitation"]').forEach(radio => {
+            radio.addEventListener('change', updateLimitations);
+        });
+        updateLimitations(); // Initial load for new tab
 
-        function updateP() {
-            const p = parseInt(document.getElementById('p-slider').value);
-            document.getElementById('p-val').innerText = p;
-            
-            let acfData = lags.map(lag => Math.pow(0.75, lag)); 
-            let pacfData = lags.map(lag => lag <= p ? 0.9 - (lag*0.05) : (Math.random()*0.15 - 0.075)); 
-            
-            pAcfChart.data.datasets[0].data = acfData;
-            pPacfChart.data.datasets[0].data = pacfData;
-            pAcfChart.update(); pPacfChart.update();
-        }
-        document.getElementById('p-slider').addEventListener('input', updateP);
-        updateP();
-
-        // Tab 4: Finding q
-        const qAcfChart = createBarChart('qAcfChart', 'ACF', '#17a2b8');
-        const qPacfChart = createBarChart('qPacfChart', 'PACF', '#fd7e14');
-
-        function updateQ() {
-            const q = parseInt(document.getElementById('q-slider').value);
-            document.getElementById('q-val').innerText = q;
-            
-            let acfData = lags.map(lag => lag <= q ? 0.9 - (lag*0.05) : (Math.random()*0.15 - 0.075)); 
-            let pacfData = lags.map(lag => Math.pow(-0.65, lag)); 
-            
-            qAcfChart.data.datasets[0].data = acfData;
-            qPacfChart.data.datasets[0].data = pacfData;
-            qAcfChart.update(); qPacfChart.update();
-        }
-        document.getElementById('q-slider').addEventListener('input', updateQ);
-        updateQ();
     </script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-# GROUP FOUR: ARIMA MODELS
+# ARIMA MODELS
 ## Introduction
 ARIMA (AutoRegressive Integrated Moving Average) is a powerful time series forecasting method that combines autoregressive (AR) and moving average (MA) components, along with differencing to achieve stationarity. It is widely used for forecasting non-seasonal time series data. SARIMA (Seasonal ARIMA) extends ARIMA to handle seasonality in the data, making it suitable for datasets with strong seasonal patterns.
 
